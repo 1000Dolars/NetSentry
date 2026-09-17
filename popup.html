@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PROTECTOR DE DERECHOS DIGITALES · popup.html
+  ----------------------------------------------------------------------------
+  Es la ventana que aparece al pulsar el icono de la extension en la barra de
+  Chrome. Aqui solo esta el ESQUELETO (la estructura vacia): los textos los
+  rellena popup.js despues de preguntarle a content.js en que red social
+  estamos. Manifest V3 prohibe el JavaScript en linea, por eso el script se
+  carga con <script src="popup.js">.
+  ============================================================================
+-->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Protector de Derechos Digitales</title>
+  <!-- Misma hoja de estilos que usa el widget inyectado en la pagina -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="pdd-body">
+  <div class="pdd-app" id="pdd-app">
+
+    <!-- 1. CABECERA: nombre de la extension + plataforma detectada -->
+    <div class="pdd-header">
+      <div class="pdd-header-txt">
+        <span class="pdd-titulo">Protector de Derechos Digitales</span>
+        <!-- popup.js escribe aqui "Detectado: Instagram", etc. -->
+        <span class="pdd-sub" id="pdd-plataforma">Detectando plataforma…</span>
+      </div>
+    </div>
+
+    <!-- 2. LOS 4 BOTONES: popup.js los crea dinamicamente dentro de este div -->
+    <div class="pdd-nav" id="pdd-nav"></div>
+
+    <!-- 3. ZONA DE RESUMEN: aqui se pintan los puntos clave al pulsar un boton -->
+    <div class="pdd-contenido" id="pdd-contenido">
+      <p class="pdd-vacio">Cargando…</p>
+    </div>
+
+    <!-- 4. PIE: descargo de responsabilidad -->
+    <div class="pdd-footer" id="pdd-footer"></div>
+
+  </div>
+
+  <script src="render.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

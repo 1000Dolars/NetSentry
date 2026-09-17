@@ -1,0 +1,563 @@
+/* ==========================================================================
+   PROTECTOR DE DERECHOS DIGITALES · styles.css
+   --------------------------------------------------------------------------
+   Un solo archivo para las DOS superficies donde vive la interfaz:
+
+     · popup.html    -> lo carga con un <link> normal, en su propio documento.
+     · content.js    -> lo pide con fetch() y lo inyecta como <style> DENTRO
+                        de un shadow root cerrado (ver content.js).
+
+   Por eso los tokens de color se declaran con el selector doble
+   ":host, :root": ":root" es quien manda cuando este archivo vive en el
+   documento normal del popup, y ":host" es quien manda cuando vive dentro
+   del shadow root del widget (ahí ":root" no encuentra ningún <html> y no
+   hace nada). El resto del archivo son clases normales — como cada
+   superficie es un árbol de DOM exclusivo (documento propio o shadow root
+   cerrado), no hace falta prefijar nada con un ID defensivo.
+
+   Paleta:  rojo #d32f2f (principal, con un tono más claro para degradados)
+            · blanco (fondo) · grises cálidos para el texto.
+   ========================================================================== */
+
+/* ==========================================================================
+   0. TOKENS DE COLOR (tema claro y oscuro)
+   ========================================================================== */
+:host, :root {
+  --pdd-rojo-claro: #ef5350;
+  --pdd-rojo: #d32f2f;
+  --pdd-rojo-oscuro: #b71c1c;
+  --pdd-rojo-suave: #fdecea;
+  --pdd-blanco: #ffffff;
+  --pdd-fondo: #ffffff;
+  --pdd-fondo-sutil: #faf7f6;
+  --pdd-texto: #212121;
+  --pdd-gris: #616161;
+  --pdd-gris-claro: #6e6e6e;   /* antes #9e9e9e: no llegaba al contraste AA (4.5:1) exigido */
+  --pdd-borde: #eee4e2;
+  --pdd-scroll: #e0d5d3;
+  --pdd-sombra: rgba(183, 28, 28, 0.16);   /* sombra con un toque del rojo de marca */
+  --pdd-sombra-fab: rgba(183, 28, 28, 0.38);
+
+  --pdd-riesgo-alto-bg: #fdecea;   --pdd-riesgo-alto-fg: #c62828;
+  --pdd-riesgo-medio-bg: #fff4e0;  --pdd-riesgo-medio-fg: #a15c00;
+  --pdd-riesgo-bajo-bg: #e8f5e9;   --pdd-riesgo-bajo-fg: #2e7d32;
+}
+
+/* El widget respeta el tema del sistema operativo/navegador incluso dentro
+   del shadow root, porque prefers-color-scheme evalúa el entorno del
+   usuario, no el documento en el que vive la regla. */
+@media (prefers-color-scheme: dark) {
+  :host, :root {
+    --pdd-rojo-claro: #ff8a75;
+    --pdd-rojo: #ff6f61;
+    --pdd-rojo-oscuro: #ff8a80;
+    --pdd-rojo-suave: #3a2422;
+    --pdd-blanco: #ffffff;
+    --pdd-fondo: #1e2124;
+    --pdd-fondo-sutil: #26292d;
+    --pdd-texto: #edeef0;
+    --pdd-gris: #b7bcc2;
+    --pdd-gris-claro: #9aa0a6;
+    --pdd-borde: #34383d;
+    --pdd-scroll: #45494e;
+    --pdd-sombra: rgba(0, 0, 0, 0.45);
+    --pdd-sombra-fab: rgba(255, 111, 97, 0.35);
+
+    --pdd-riesgo-alto-bg: #3a201f;   --pdd-riesgo-alto-fg: #ff8a80;
+    --pdd-riesgo-medio-bg: #3a2f16;  --pdd-riesgo-medio-fg: #ffca80;
+    --pdd-riesgo-bajo-bg: #1f3d24;   --pdd-riesgo-bajo-fg: #81c995;
+  }
+}
+
+/* ==========================================================================
+   1. LÍNEA BASE
+   --------------------------------------------------------------------------
+   ":host { all: initial; ... }" es lo que de verdad aísla el widget: dentro
+   de un shadow root cerrado, ninguna regla de Facebook/TikTok puede
+   seleccionar nuestros elementos (el propio shadow DOM ya lo impide), pero
+   las PROPIEDADES HEREDABLES (fuente, color, interlineado) sí atraviesan el
+   límite del shadow tree desde el elemento host hacia adentro. "all:
+   initial" corta esa herencia de un solo golpe y volvemos a fijar aquí nada
+   más lo que sí queremos heredar.
+   ========================================================================== */
+:host {
+  all: initial;
+  box-sizing: border-box;
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pdd-texto);
+}
+:host *, :host *::before, :host *::after { box-sizing: border-box; }
+
+/* ":host" no existe fuera de un shadow tree, así que el popup (que vive en
+   su propio documento normal, no en un shadow root) necesita su propia
+   línea base con las mismas cifras. No usamos "all: initial" aquí: el
+   popup no tiene ninguna página ajena de la que defenderse, y resetear
+   TODO en <body> se llevaría por delante su display:block. */
+body {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--pdd-texto);
+}
+body *, body *::before, body *::after { box-sizing: border-box; }
+
+/* Reset ligero SOLO para quitar el estilo por defecto del navegador en
+   botones y listas — popup.html no comparte documento con ninguna página
+   ajena, así que no necesita defenderse de nada, solo verse consistente. */
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  text-align: inherit;
+}
+ul { list-style: none; margin: 0; padding: 0; }
+a { cursor: pointer; text-decoration: none; }
+h1, h2, h3, p { margin: 0; }
+
+/* Foco visible para quien navega con teclado — el reset de arriba no debe
+   dejar a nadie sin indicador de foco (por eso NO usamos outline:0 aquí). */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--pdd-rojo-oscuro);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Quien prefiere menos movimiento no debería notar ninguna de las
+   animaciones nuevas de este archivo: las neutralizamos todas de un golpe
+   en vez de acordarnos de excluir cada @keyframes una por una. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ==========================================================================
+   2. CONTENEDORES
+   ========================================================================== */
+
+/* --- 2a. El popup de la barra de Chrome --------------------------------- */
+.pdd-body {
+  width: 360px;                 /* ancho fijo: un popup pequeño y contenido */
+  margin: 0;
+  background: var(--pdd-fondo);
+}
+
+.pdd-app {
+  display: flex;
+  flex-direction: column;
+  background: var(--pdd-fondo);
+  overflow: hidden;             /* para que las esquinas redondeadas del header se vean limpias */
+}
+
+/* --- 2b. El widget flotante (host del shadow root) ---------------------- */
+/* Estas reglas solo hacen algo cuando este archivo vive DENTRO del shadow
+   root del widget: ":host" no existe fuera de un shadow tree, así que en
+   el popup son simplemente inertes. */
+:host {
+  position: fixed;
+  left: 18px;
+  bottom: 18px;
+  z-index: 2147483647;          /* máximo de 32 bits: gana cualquier guerra de capas */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;      /* esquina inferior IZQUIERDA: la derecha suele */
+  gap: 12px;                    /* estar ocupada por el chat nativo de la plataforma */
+}
+
+@keyframes pdd-fab-entrada {
+  from { transform: scale(0.4) rotate(-20deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* Burbuja: el ancla visual del widget. Un solo "pop" suave al aparecer
+   (no un bucle: eso sería justo lo invasivo que la burbuja evita ser). */
+.pdd-fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--pdd-rojo-claro), var(--pdd-rojo-oscuro));
+  color: var(--pdd-blanco);
+  font-size: 22px;
+  line-height: 48px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px var(--pdd-sombra-fab);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  animation: pdd-fab-entrada 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.pdd-fab:hover {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: 0 8px 20px var(--pdd-sombra-fab);
+}
+.pdd-fab:active { transform: scale(0.97); }
+
+/* Panel flotante: mismo diseño que el popup, un poco más estrecho */
+.pdd-panel {
+  width: 320px;
+  max-height: 65vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--pdd-fondo);
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 16px 40px var(--pdd-sombra);
+  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom left;
+}
+
+/* Estado plegado: solo se ve la burbuja. La clase vive en el HOST (fuera
+   del shadow root), por eso se selecciona con :host(.pdd-cerrado) en vez
+   de un descendiente normal. */
+:host(.pdd-cerrado) .pdd-panel {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px) scale(0.92);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   3. CABECERA
+   ========================================================================== */
+.pdd-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 16px 14px;
+  background: linear-gradient(135deg, var(--pdd-rojo-claro), var(--pdd-rojo) 55%, var(--pdd-rojo-oscuro));
+}
+
+.pdd-header-txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;                 /* permite que el texto largo se recorte */
+}
+
+.pdd-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--pdd-blanco);
+}
+.pdd-titulo::before {
+  content: "\1F6E1\FE0F";       /* el mismo escudo de la burbuja, para reforzar la marca */
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pdd-sub {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--pdd-blanco);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botón "x" para ocultar el widget (solo existe en la versión inyectada) */
+.pdd-cerrar {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 22px;
+  text-align: center;
+  color: var(--pdd-blanco);
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+.pdd-cerrar:hover { opacity: 1; background: rgba(255, 255, 255, 0.22); transform: rotate(90deg); }
+.pdd-cerrar:focus-visible { outline-color: var(--pdd-blanco); }
+
+/* ==========================================================================
+   4. LOS 4 BOTONES
+   ========================================================================== */
+.pdd-nav {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px;
+  background: var(--pdd-fondo);
+  border-bottom: 1px solid var(--pdd-borde);
+}
+
+.pdd-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 2px 9px;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.pdd-btn:hover { background: var(--pdd-fondo-sutil); transform: translateY(-1px); }
+.pdd-btn:active { transform: translateY(0); }
+
+.pdd-btn-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--pdd-fondo-sutil);
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.pdd-btn-txt {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pdd-gris);
+  text-align: center;
+}
+
+/* Botón seleccionado: el icono pasa a llevar el degradado de marca */
+.pdd-btn.pdd-activo { background: var(--pdd-rojo-suave); }
+.pdd-btn.pdd-activo .pdd-btn-icono {
+  background: linear-gradient(135deg, var(--pdd-rojo-claro), var(--pdd-rojo-oscuro));
+  transform: scale(1.05);
+}
+.pdd-btn.pdd-activo .pdd-btn-txt { color: var(--pdd-rojo); }
+
+/* ==========================================================================
+   5. ZONA DE RESUMEN
+   ========================================================================== */
+.pdd-contenido {
+  padding: 16px;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--pdd-fondo);
+}
+/* Dentro del widget (siempre tiene .pdd-panel como ancestro) el alto lo
+   manda el panel, no un límite propio; en el popup no existe .pdd-panel,
+   así que esta regla nunca aplica ahí y se queda con el max-height de arriba. */
+.pdd-panel .pdd-contenido {
+  max-height: none;
+  flex: 1 1 auto;
+}
+
+@keyframes pdd-entra {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pdd-seccion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  animation: pdd-entra 0.25s ease both;
+}
+
+.pdd-seccion-titulo-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pdd-seccion-icono {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--pdd-rojo-suave);
+  font-size: 13px;
+}
+
+.pdd-h2 {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--pdd-rojo);
+}
+
+/* Semáforo de riesgo: verde/ámbar/rojo, siempre con texto (no solo color)
+   para que también lo entienda quien no distingue esos tonos. El punto de
+   antes del texto toma su color de "currentColor", así que no necesita
+   ninguna variable extra: siempre coincide con el texto de su propia
+   variante. */
+.pdd-riesgo {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding: 4px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.pdd-riesgo::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.pdd-riesgo--alto  { background: var(--pdd-riesgo-alto-bg);  color: var(--pdd-riesgo-alto-fg); }
+.pdd-riesgo--medio { background: var(--pdd-riesgo-medio-bg); color: var(--pdd-riesgo-medio-fg); }
+.pdd-riesgo--bajo  { background: var(--pdd-riesgo-bajo-bg);  color: var(--pdd-riesgo-bajo-fg); }
+
+.pdd-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: pdd-entra 0.3s ease both;
+  animation-delay: 0.04s;
+}
+
+/* Cada punto clave lleva una barrita roja a la izquierda y se resalta
+   suavemente al pasar el cursor, para que la lista se sienta interactiva
+   aunque no lo sea. */
+.pdd-punto {
+  position: relative;
+  padding: 8px 8px 8px 16px;
+  margin-left: -8px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--pdd-texto);
+  transition: background 0.15s ease;
+}
+.pdd-punto:hover { background: var(--pdd-fondo-sutil); }
+.pdd-punto::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(var(--pdd-rojo-claro), var(--pdd-rojo));
+  opacity: 0.65;
+}
+
+/* Enlaces de acción: documento oficial y "reportar un error", como
+   pastillas pequeñas en vez de texto suelto — invitan más al clic. */
+.pdd-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  animation: pdd-entra 0.35s ease both;
+  animation-delay: 0.08s;
+}
+.pdd-fuente, .pdd-reportar {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.pdd-fuente {
+  background: var(--pdd-rojo-suave);
+  color: var(--pdd-rojo);
+}
+.pdd-fuente:hover { background: var(--pdd-rojo); color: var(--pdd-blanco); transform: translateY(-1px); }
+
+.pdd-reportar {
+  background: var(--pdd-fondo-sutil);
+  color: var(--pdd-gris);
+  font-weight: 600;
+}
+.pdd-reportar:hover { background: var(--pdd-borde); color: var(--pdd-texto); transform: translateY(-1px); }
+
+/* Mensaje cuando no hay ninguna sección elegida */
+.pdd-vacio {
+  font-size: 12px;
+  color: var(--pdd-gris-claro);
+  text-align: center;
+  padding: 28px 12px;
+}
+.pdd-vacio::before {
+  content: "\1F6E1\FE0F";
+  display: block;
+  font-size: 30px;
+  margin-bottom: 10px;
+  opacity: 0.35;
+}
+
+/* ==========================================================================
+   6. PIE / DESCARGO
+   ========================================================================== */
+.pdd-footer {
+  padding: 11px 16px 13px;
+  border-top: 1px solid var(--pdd-borde);
+  background: var(--pdd-fondo-sutil);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pdd-verificado {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--pdd-gris);
+}
+.pdd-verificado::before {
+  content: "\2713";
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--pdd-riesgo-bajo-bg);
+  color: var(--pdd-riesgo-bajo-fg);
+  font-size: 8px;
+  font-weight: 900;
+}
+.pdd-descargo {
+  font-size: 11px;              /* antes 9.5px: demasiado pequeño para texto legal */
+  line-height: 1.45;
+  color: var(--pdd-gris-claro);
+}
+
+/* ==========================================================================
+   7. BARRA DE SCROLL DISCRETA
+   ========================================================================== */
+.pdd-contenido::-webkit-scrollbar { width: 6px; }
+.pdd-contenido::-webkit-scrollbar-thumb { background: var(--pdd-scroll); border-radius: 3px; }
+.pdd-contenido::-webkit-scrollbar-thumb:hover { background: var(--pdd-gris-claro); }

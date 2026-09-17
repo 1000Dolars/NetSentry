@@ -1,0 +1,10 @@
+# Ajustes locales de Claude Code (por máquina, no se comparten)
+.claude/settings.local.json
+
+# Paquetes generados para la Chrome Web Store
+*.zip
+
+# Basura del sistema operativo
+Thumbs.db
+desktop.ini
+.DS_Store

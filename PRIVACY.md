@@ -1,4 +1,3 @@
-# NetSentry
 # Política de privacidad — Protector de Derechos Digitales
 
 Última actualización: 12 de septiembre de 2026.
