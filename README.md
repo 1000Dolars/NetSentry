@@ -24,6 +24,7 @@ asesoría legal. Ver [PRIVACY.md](PRIVACY.md).
 | `popup.html` / `popup.js` | La ventana que se abre al pulsar el icono de la barra de Chrome. |
 | `styles.css` | Una sola hoja de estilos para las dos superficies (popup y widget). |
 | `icons/` | Iconos que usa Chrome (toolbar, `chrome://extensions`), a 16/48/128 px. Mismo diseño que el logo, exportado a esos tamaños exactos. |
+| `index.html` | Página de presentación del proyecto, publicada con GitHub Pages. No forma parte de la extensión. |
 | `logo/` | El logo de marca en tamaño grande: `logo.svg` fuente vectorial, `logo-512.png` y `logo-1024.png` exportados para donde no se acepte SVG (ficha de la Chrome Web Store, redes, etc.). |
 
 ## Instalar en modo desarrollador
@@ -50,13 +51,14 @@ Brave, Opera GX.
 
 ## Publicar en la Chrome Web Store
 
-El archivo `protector-derechos-digitales-1.4.0.zip` en la raíz del proyecto
-ya está armado para subir tal cual: contiene únicamente lo que la extensión
-necesita en tiempo de ejecución (`manifest.json`, los `.js`, `popup.html`,
-`styles.css` e `icons/`) — ni la documentación ni `logo/` van dentro, porque
-la Web Store no los usa para nada. Cada vez que cambies alguno de esos
-archivos, regenera el zip (súbelo a mano con el Explorador de Windows, o
-pide que se vuelva a generar) antes de subir una nueva versión.
+El `.zip` que pide la Web Store **no está versionado** en el repositorio
+(`.gitignore` excluye `*.zip`): es un artefacto que se regenera, no código
+fuente. Tiene que contener únicamente lo que la extensión necesita en tiempo
+de ejecución — `manifest.json`, los cuatro `.js`, `popup.html`, `styles.css`
+e `icons/` — y nada más: ni la documentación, ni `logo/`, ni `index.html`, ni
+las capturas de la ficha, porque la Web Store no los usa para nada. Regenera
+el zip cada vez que cambies alguno de esos archivos, antes de subir una
+versión nueva.
 
 Antes de subirlo:
 
@@ -87,6 +89,30 @@ añadir un país nuevo es declarar su dominio en **tres** listas de
 widget no llega a dibujarse en ese dominio. Verifica el dominio exacto de Google para ese
 país antes de añadirlo — no todos siguen el mismo patrón (por ejemplo,
 Venezuela es `google.co.ve`, no `google.com.ve`).
+
+## Página de presentación
+
+[**1000dolars.github.io/NetSentry**](https://1000dolars.github.io/NetSentry/)
+— una sola página que explica el proyecto: el problema, las cuatro secciones,
+la matriz de riesgo por plataforma, la política de privacidad y cómo
+instalarlo.
+
+Vive en [index.html](index.html), en la raíz y no en una carpeta `docs/`, a
+propósito: así puede cargar los archivos reales de la extensión y montar una
+demo que no es una captura de pantalla, sino la misma interfaz que se instala
+en el navegador. Repite la técnica de [content.js](content.js) —un Shadow DOM
+con `styles.css` dentro— para que los estilos de la página y los de la
+extensión no se pisen, y calcula las cifras y la matriz de riesgo al vuelo
+desde `window.PDD_DATA`: cuando cambie un resumen en
+[data.js](data.js), la página se entera sola. No carga ningún recurso de
+terceros.
+
+Para verla en local hace falta un servidor (los `<script src>` relativos no
+funcionan abriendo el archivo con doble clic desde ciertos navegadores):
+
+```bash
+python -m http.server 4173
+```
 
 ## Historial de cambios
 

@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  PROTECTOR DE DERECHOS DIGITALES · index.html
+  ----------------------------------------------------------------------------
+  Página de presentación del proyecto, publicada con GitHub Pages desde la
+  raíz del repositorio. Vive aquí arriba, y no en una carpeta /docs, por una
+  razón concreta: así puede cargar los archivos REALES de la extensión
+  (data.js, render.js, styles.css) y montar una demo que no es una captura
+  de pantalla, sino la misma interfaz que se instala en el navegador.
+
+  La demo repite la técnica de content.js: un Shadow DOM propio con
+  styles.css dentro, para que los estilos de la extensión y los de esta
+  página no se pisen. Los números y la matriz de riesgo se calculan al vuelo
+  desde window.PDD_DATA, así que no hay que actualizarlos a mano cuando
+  cambie el contenido de los resúmenes.
+
+  No carga NADA de terceros: ni fuentes, ni analítica, ni CDNs. Una página
+  sobre privacidad que te rastreara sería una broma de mal gusto.
+  ============================================================================
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protector de Derechos Digitales — la letra pequeña, en 30 segundos</title>
+<meta name="description" content="Extensión de Chrome que detecta en qué plataforma estás y resume en puntos cortos sus términos, sus cookies y los derechos digitales que pones en riesgo. Facebook, Instagram, TikTok, Google y YouTube.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="logo/logo.svg" type="image/svg+xml">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Protector de Derechos Digitales">
+<meta property="og:description" content="La letra pequeña de Facebook, Instagram, TikTok, Google y YouTube, resumida en puntos cortos mientras navegas.">
+<meta property="og:image" content="logo/logo-512.png">
+
+<style>
+/* ==========================================================================
+   0. TOKENS — mismos rojos de marca que styles.css, más una escala neutra
+      propia de esta página (la extensión vive en 360 px; esto, en 1200).
+   ========================================================================== */
+:root {
+  --rojo-claro: #ef5350;
+  --rojo: #d32f2f;
+  --rojo-oscuro: #b71c1c;
+  --rojo-suave: #fdecea;
+
+  --fondo: #ffffff;
+  --fondo-alt: #faf7f6;
+  --fondo-card: #ffffff;
+  --texto: #1a1a1d;
+  --texto-medio: #4a4a52;
+  --texto-suave: #6e6e78;
+  --borde: #e9e0de;
+  --sombra-sm: 0 1px 2px rgba(24, 12, 12, .06), 0 2px 8px rgba(24, 12, 12, .04);
+  --sombra-md: 0 2px 4px rgba(24, 12, 12, .06), 0 12px 32px rgba(183, 28, 28, .10);
+  --sombra-lg: 0 4px 8px rgba(24, 12, 12, .06), 0 24px 60px rgba(183, 28, 28, .16);
+
+  --alto-bg: #fdecea;  --alto-fg: #c62828;
+  --medio-bg: #fff4e0; --medio-fg: #a15c00;
+  --bajo-bg: #e8f5e9;  --bajo-fg: #2e7d32;
+
+  --radio: 16px;
+  --ancho: 1120px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rojo-claro: #ff8a75;
+    --rojo: #ff6f61;
+    --rojo-oscuro: #ff5c4d;
+    --rojo-suave: #3a2422;
+
+    --fondo: #16181b;
+    --fondo-alt: #1c1f23;
+    --fondo-card: #1e2226;
+    --texto: #edeef0;
+    --texto-medio: #c3c8ce;
+    --texto-suave: #9aa0a6;
+    --borde: #2e3338;
+    --sombra-sm: 0 1px 2px rgba(0, 0, 0, .4);
+    --sombra-md: 0 2px 4px rgba(0, 0, 0, .4), 0 12px 32px rgba(0, 0, 0, .45);
+    --sombra-lg: 0 4px 8px rgba(0, 0, 0, .4), 0 24px 60px rgba(0, 0, 0, .55);
+
+    --alto-bg: #3a201f;  --alto-fg: #ff8a80;
+    --medio-bg: #3a2f16; --medio-fg: #ffca80;
+    --bajo-bg: #1f3d24;  --bajo-fg: #81c995;
+  }
+}
+
+/* ==========================================================================
+   1. BASE
+   ========================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { line-height: 1.15; letter-spacing: -0.022em; margin: 0; }
+h1 { font-size: clamp(2.1rem, 5.2vw, 3.6rem); font-weight: 800; }
+h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 750; }
+h3 { font-size: 1.12rem; font-weight: 700; letter-spacing: -0.01em; }
+p  { margin: 0; }
+a  { color: var(--rojo); }
+
+.envoltura { width: min(100% - 40px, var(--ancho)); margin-inline: auto; }
+
+section { padding: clamp(56px, 8vw, 104px) 0; }
+.franja { background: var(--fondo-alt); border-block: 1px solid var(--borde); }
+
+.rotulo {
+  display: inline-block;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--rojo);
+  margin-bottom: 14px;
+}
+
+.entradilla {
+  color: var(--texto-medio);
+  font-size: clamp(1rem, 1.6vw, 1.14rem);
+  max-width: 62ch;
+  margin-top: 16px;
+}
+
+/* ==========================================================================
+   2. BARRA SUPERIOR
+   ========================================================================== */
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--fondo) 86%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--borde);
+}
+.barra-interior {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 64px;
+}
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; font-weight: 700; letter-spacing: -.015em; }
+.marca img { width: 30px; height: 30px; border-radius: 8px; }
+.marca span { white-space: nowrap; }
+.barra nav { margin-left: auto; display: flex; align-items: center; gap: 4px; }
+.barra nav a {
+  padding: 8px 12px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: var(--texto-medio);
+  font-size: .93rem;
+  font-weight: 550;
+}
+.barra nav a:hover { background: var(--rojo-suave); color: var(--rojo); }
+.barra nav a.destacado {
+  background: var(--texto);
+  color: var(--fondo);
+}
+.barra nav a.destacado:hover { opacity: .85; background: var(--texto); color: var(--fondo); }
+@media (max-width: 860px) { .barra nav a.oculta-movil { display: none; } .marca span { display: none; } }
+
+/* ==========================================================================
+   3. PORTADA
+   ========================================================================== */
+.portada {
+  position: relative;
+  overflow: hidden;
+  padding-top: clamp(48px, 7vw, 88px);
+}
+/* Halo de marca detrás del titular, sin imágenes */
+.portada::before {
+  content: "";
+  position: absolute;
+  inset: -30% 35% 40% -20%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--rojo) 22%, transparent), transparent);
+  filter: blur(40px);
+  pointer-events: none;
+}
+.portada-rejilla {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+@media (max-width: 980px) { .portada-rejilla { grid-template-columns: minmax(0, 1fr); } }
+
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-card);
+  box-shadow: var(--sombra-sm);
+  font-size: .82rem;
+  font-weight: 600;
+  color: var(--texto-medio);
+}
+.punto-vivo {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--rojo);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--rojo) 18%, transparent);
+}
+
+.portada h1 { margin-top: 22px; }
+.portada h1 em { font-style: normal; color: var(--rojo); }
+
+.acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 650;
+  font-size: .97rem;
+  border: 1px solid transparent;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.boton:hover { transform: translateY(-1px); }
+.boton-primario {
+  background: linear-gradient(135deg, var(--rojo-claro), var(--rojo) 55%, var(--rojo-oscuro));
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(183, 28, 28, .32);
+}
+.boton-secundario {
+  background: var(--fondo-card);
+  color: var(--texto);
+  border-color: var(--borde);
+  box-shadow: var(--sombra-sm);
+}
+
+/* Cifras de la portada */
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--borde);
+}
+@media (max-width: 560px) { .cifras { grid-template-columns: repeat(2, 1fr); gap: 20px 10px; } }
+.cifra b {
+  display: block;
+  font-size: clamp(1.5rem, 3vw, 1.95rem);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--rojo);
+  line-height: 1.1;
+}
+.cifra span { font-size: .84rem; color: var(--texto-suave); }
+
+/* ==========================================================================
+   4. DEMO — el marco de navegador que envuelve la interfaz real
+   ========================================================================== */
+.escenario { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+
+.ventana {
+  width: 100%;
+  max-width: 430px;
+  border-radius: 18px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-card);
+  box-shadow: var(--sombra-lg);
+  overflow: hidden;
+}
+.ventana-barra {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--borde);
+  background: var(--fondo-alt);
+}
+.semaforo { width: 10px; height: 10px; border-radius: 50%; background: var(--borde); }
+.ventana-url {
+  margin-left: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  font-size: .74rem;
+  color: var(--texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ventana-cuerpo { padding: 18px; display: flex; justify-content: center; background: var(--fondo-alt); }
+@media (max-width: 420px) { .ventana-cuerpo { padding: 10px; } }
+
+/* El host del Shadow DOM de la demo.
+   styles.css declara ":host { position: fixed; left: 18px; bottom: 18px }"
+   porque ahí dentro ese host es el widget flotante de la página real. Aquí
+   no queremos que se despegue a la esquina de la pantalla, y las reglas del
+   documento exterior ganan a las reglas :host del shadow tree, así que basta
+   con volver a fijar el posicionamiento desde fuera. */
+#portada-host, #demo-host {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  display: block;
+  width: 100%;
+  max-width: 320px;   /* el ancho real del panel del widget */
+}
+.demo-cargando { padding: 40px 10px; text-align: center; color: var(--texto-suave); font-size: .9rem; }
+
+/* Selector de plataforma de la demo */
+.selector { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.selector button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+  background: var(--fondo-card);
+  color: var(--texto-medio);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--sombra-sm);
+  transition: transform .15s ease;
+}
+.selector button:hover { transform: translateY(-1px); color: var(--texto); }
+.selector button[aria-pressed="true"] {
+  background: linear-gradient(135deg, var(--rojo-claro), var(--rojo) 55%, var(--rojo-oscuro));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 5px 14px rgba(183, 28, 28, .3);
+}
+.pie-demo { font-size: .84rem; color: var(--texto-suave); text-align: center; max-width: 46ch; }
+
+/* ==========================================================================
+   5. TARJETAS
+   ========================================================================== */
+.rejilla { display: grid; gap: 18px; margin-top: 40px; }
+.rejilla-3 { grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); }
+.rejilla-4 { grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); }
+.rejilla-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.tarjeta {
+  padding: 26px;
+  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  background: var(--fondo-card);
+  box-shadow: var(--sombra-sm);
+}
+.tarjeta p { color: var(--texto-medio); font-size: .96rem; margin-top: 9px; }
+.emblema {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  margin-bottom: 16px;
+  font-size: 22px;
+  background: linear-gradient(135deg, var(--rojo-claro), var(--rojo-oscuro));
+  box-shadow: 0 5px 14px rgba(183, 28, 28, .28);
+}
+.numero {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  margin-bottom: 14px;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--rojo);
+  background: var(--rojo-suave);
+}
+
+/* Lista de comprobación (privacidad) */
+.chequeo { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+.chequeo li { display: flex; gap: 12px; align-items: flex-start; color: var(--texto-medio); font-size: .97rem; }
+.chequeo li::before {
+  content: "✓";
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--bajo-bg);
+  color: var(--bajo-fg);
+  font-size: .78rem;
+  font-weight: 800;
+}
+.chequeo.cruces li::before { content: "✕"; background: var(--alto-bg); color: var(--alto-fg); }
+.chequeo li b { color: var(--texto); font-weight: 650; }
+
+/* ==========================================================================
+   6. MATRIZ DE RIESGO
+   ========================================================================== */
+.tabla-marco {
+  margin-top: 40px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo-card);
+  box-shadow: var(--sombra-sm);
+  overflow-x: auto;
+}
+table { width: 100%; border-collapse: collapse; min-width: 560px; }
+th, td { padding: 15px 18px; text-align: left; border-bottom: 1px solid var(--borde); }
+tbody tr:last-child td { border-bottom: 0; }
+thead th {
+  font-size: .76rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--texto-suave);
+  font-weight: 700;
+  background: var(--fondo-alt);
+}
+tbody th { font-weight: 650; font-size: .98rem; white-space: nowrap; }
+tbody th .emoji { margin-right: 9px; }
+tbody tr:hover td, tbody tr:hover th { background: color-mix(in srgb, var(--rojo) 4%, transparent); }
+
+.pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 650;
+}
+.pastilla::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pastilla.alto  { background: var(--alto-bg);  color: var(--alto-fg); }
+.pastilla.medio { background: var(--medio-bg); color: var(--medio-fg); }
+.pastilla.bajo  { background: var(--bajo-bg);  color: var(--bajo-fg); }
+
+/* ==========================================================================
+   7. INSTALACIÓN
+   ========================================================================== */
+.pasos { counter-reset: paso; display: grid; gap: 14px; margin-top: 40px; list-style: none; padding: 0; }
+.pasos li {
+  counter-increment: paso;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 22px 24px;
+  border-radius: var(--radio);
+  border: 1px solid var(--borde);
+  background: var(--fondo-card);
+  box-shadow: var(--sombra-sm);
+}
+.pasos li::before {
+  content: counter(paso);
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--rojo-claro), var(--rojo-oscuro));
+  color: #fff;
+  font-weight: 800;
+}
+.pasos strong { display: block; font-size: 1.03rem; }
+.pasos p { color: var(--texto-medio); font-size: .95rem; margin-top: 5px; }
+code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: .87em;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--rojo-suave);
+  color: var(--rojo-oscuro);
+  border: 1px solid color-mix(in srgb, var(--rojo) 14%, transparent);
+}
+@media (prefers-color-scheme: dark) { code { color: var(--rojo-claro); } }
+
+/* ==========================================================================
+   8. CIERRE Y PIE
+   ========================================================================== */
+.cierre {
+  text-align: center;
+  padding: clamp(52px, 7vw, 88px) clamp(24px, 5vw, 64px);
+  border-radius: 26px;
+  background: linear-gradient(135deg, var(--rojo-claro), var(--rojo) 55%, var(--rojo-oscuro));
+  color: #fff;
+  box-shadow: var(--sombra-lg);
+}
+.cierre h2 { color: #fff; }
+.cierre p { color: rgba(255, 255, 255, .92); margin: 16px auto 0; max-width: 56ch; }
+.cierre .acciones { justify-content: center; }
+.cierre .boton-secundario { background: #fff; color: var(--rojo-oscuro); border-color: transparent; }
+.cierre .boton-fantasma { background: rgba(255, 255, 255, .14); color: #fff; border-color: rgba(255, 255, 255, .45); }
+
+.aviso {
+  margin-top: 36px;
+  padding: 20px 24px;
+  border-radius: 14px;
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--rojo);
+  background: var(--fondo-alt);
+  color: var(--texto-medio);
+  font-size: .92rem;
+}
+
+footer { border-top: 1px solid var(--borde); padding: 40px 0; color: var(--texto-suave); font-size: .89rem; }
+.pie-rejilla { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; justify-content: space-between; }
+footer a { color: var(--texto-medio); text-decoration: none; }
+footer a:hover { color: var(--rojo); text-decoration: underline; }
+.pie-enlaces { display: flex; flex-wrap: wrap; gap: 18px; }
+</style>
+</head>
+
+<body>
+
+<!-- ======================== BARRA SUPERIOR ======================== -->
+<header class="barra">
+  <div class="envoltura barra-interior">
+    <a class="marca" href="#">
+      <img src="logo/logo.svg" alt="">
+      <span>Protector de Derechos Digitales</span>
+    </a>
+    <nav>
+      <a class="oculta-movil" href="#que-hace">Qué hace</a>
+      <a href="#demo">Demo</a>
+      <a class="oculta-movil" href="#plataformas">Plataformas</a>
+      <a class="oculta-movil" href="#privacidad">Privacidad</a>
+      <a class="destacado" href="#instalar">Instalar</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============================ PORTADA ============================ -->
+<section class="portada">
+  <div class="envoltura portada-rejilla">
+
+    <div>
+      <span class="insignia"><i class="punto-vivo"></i> v1.4.1 · Manifest V3 · Chrome, Edge, Brave y Opera</span>
+      <h1>Nadie lee los términos.<br><em>Ahora no hace falta.</em></h1>
+      <p class="entradilla">
+        Aceptaste los Términos y Condiciones de Facebook, Instagram, TikTok, Google y
+        YouTube sin leerlos. Todo el mundo lo hace: son decenas de páginas escritas
+        para abogados. Esta extensión detecta en cuál de esas cinco plataformas estás
+        y te enseña, en puntos cortos y en español, qué aceptaste, qué te rastrea y
+        qué derechos digitales estás poniendo en riesgo.
+      </p>
+
+      <div class="acciones">
+        <a class="boton boton-primario" href="#demo">Probar la demo ↓</a>
+        <a class="boton boton-secundario" href="#instalar">Cómo se instala</a>
+      </div>
+
+      <div class="cifras">
+        <div class="cifra"><b id="cifra-plataformas">5</b><span>plataformas vigiladas</span></div>
+        <div class="cifra"><b id="cifra-resumenes">20</b><span>resúmenes</span></div>
+        <div class="cifra"><b id="cifra-puntos">105</b><span>puntos clave</span></div>
+        <div class="cifra"><b>0</b><span>datos recopilados</span></div>
+      </div>
+    </div>
+
+    <!-- La interfaz real de la extensión, montada en su propio Shadow DOM -->
+    <div class="escenario">
+      <div class="ventana">
+        <div class="ventana-barra">
+          <i class="semaforo"></i><i class="semaforo"></i><i class="semaforo"></i>
+          <div class="ventana-url">www.instagram.com</div>
+        </div>
+        <div class="ventana-cuerpo">
+          <div id="portada-host"><p class="demo-cargando">Cargando la interfaz…</p></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- =========================== EL PROBLEMA =========================== -->
+<section class="franja" id="problema">
+  <div class="envoltura">
+    <span class="rotulo">El problema</span>
+    <h2>El consentimiento que nadie da de verdad</h2>
+    <p class="entradilla">
+      Un contrato que no se puede leer en un tiempo razonable no informa a nadie.
+      El resultado es que millones de personas ceden derechos concretos sin saber
+      cuáles.
+    </p>
+
+    <div class="rejilla rejilla-3">
+      <article class="tarjeta">
+        <div class="numero">01</div>
+        <h3>Están escritos para no ser leídos</h3>
+        <p>
+          Términos, política de cookies y política de privacidad son documentos
+          separados, largos y en lenguaje jurídico. Aceptar cuesta un clic;
+          entender, una tarde.
+        </p>
+      </article>
+      <article class="tarjeta">
+        <div class="numero">02</div>
+        <h3>Lo que aceptas es muy real</h3>
+        <p>
+          Licencias mundiales sobre lo que publicas, rastreo que te sigue fuera de
+          la plataforma, perfilado algorítmico, moderación automática y apelaciones
+          lentas. No son tecnicismos: son derechos.
+        </p>
+      </article>
+      <article class="tarjeta">
+        <div class="numero">03</div>
+        <h3>Y llega tarde</h3>
+        <p>
+          La información existe, pero está en otra pestaña y a varios clics. Nadie
+          interrumpe lo que está haciendo para ir a buscarla. Tiene que aparecer
+          donde ya estás.
+        </p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ QUÉ HACE ============================ -->
+<section id="que-hace">
+  <div class="envoltura">
+    <span class="rotulo">La solución</span>
+    <h2>Cuatro respuestas, siempre las mismas cuatro</h2>
+    <p class="entradilla">
+      En cada plataforma la extensión muestra las mismas cuatro secciones, para que
+      puedas comparar unas con otras sin volver a aprender dónde estaba cada cosa.
+    </p>
+
+    <div class="rejilla rejilla-4">
+      <article class="tarjeta">
+        <div class="emblema">📄</div>
+        <h3>Términos y Condiciones</h3>
+        <p>Qué licencia cedes sobre lo que publicas, cuándo pueden suspender tu cuenta y qué pasa cuando cambian las reglas.</p>
+      </article>
+      <article class="tarjeta">
+        <div class="emblema">🍪</div>
+        <h3>Política de Cookies</h3>
+        <p>Qué te rastrea dentro y fuera de la plataforma, para qué se usa y en qué ajuste concreto se apaga.</p>
+      </article>
+      <article class="tarjeta">
+        <div class="emblema">⚠️</div>
+        <h3>Derechos en riesgo</h3>
+        <p>Privacidad, propiedad intelectual, transparencia algorítmica, moderación, menores y salud digital.</p>
+      </article>
+      <article class="tarjeta">
+        <div class="emblema">❗</div>
+        <h3>Avisos y recomendaciones</h3>
+        <p>Qué puedes cambiar hoy mismo: ajustes de privacidad, historiales que conviene borrar, riesgos que vigilar.</p>
+      </article>
+    </div>
+
+    <div class="rejilla rejilla-3">
+      <article class="tarjeta">
+        <h3>🚦 Semáforo de riesgo</h3>
+        <p>Cada sección lleva una valoración editorial —alto, medio o bajo— de cuánto compromete tus derechos, para priorizar de un vistazo.</p>
+      </article>
+      <article class="tarjeta">
+        <h3>🔗 Enlace al documento oficial</h3>
+        <p>Cada resumen apunta a su fuente original. El resumen no sustituye al documento: te lleva a él sabiendo qué buscar.</p>
+      </article>
+      <article class="tarjeta">
+        <h3>✉️ Reportar un error</h3>
+        <p>Si un punto está desactualizado, un enlace abre el correo con la plataforma y la sección ya rellenadas. Los términos cambian; esto también.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== DEMO ============================== -->
+<section class="franja" id="demo">
+  <div class="envoltura">
+    <span class="rotulo">Demo en vivo</span>
+    <h2>Pruébala aquí mismo</h2>
+    <p class="entradilla">
+      Elige una plataforma y abre cualquiera de las cuatro secciones. Esto no es una
+      captura de pantalla: es la interfaz real de la extensión, cargando los mismos
+      <code>data.js</code>, <code>render.js</code> y <code>styles.css</code> que se
+      instalan en tu navegador, dentro de un Shadow DOM propio de esta página.
+    </p>
+
+    <div class="rejilla rejilla-2" style="align-items:start">
+      <div class="escenario" style="margin-top:40px">
+        <div class="selector" id="demo-selector" role="group" aria-label="Elegir plataforma"></div>
+        <div class="ventana">
+          <div class="ventana-barra">
+            <i class="semaforo"></i><i class="semaforo"></i><i class="semaforo"></i>
+            <div class="ventana-url" id="demo-url">www.instagram.com</div>
+          </div>
+          <div class="ventana-cuerpo">
+            <div id="demo-host"><p class="demo-cargando">Cargando la interfaz…</p></div>
+          </div>
+        </div>
+        <p class="pie-demo">
+          Esto es exactamente lo que verías al pulsar la burbuja 🛡️ mientras navegas
+          por esa plataforma.
+        </p>
+      </div>
+
+      <div class="tarjeta" style="margin-top:40px">
+        <h3>Dos formas de abrirlo</h3>
+        <ul class="chequeo" style="margin-top:16px">
+          <li><span><b>La burbuja flotante.</b> Un escudo discreto en la esquina inferior izquierda de la página —la derecha suele estar ocupada por el chat de la propia plataforma—. Se pliega al pulsarlo y se cierra con <code>Esc</code>.</span></li>
+          <li><span><b>El icono de la barra.</b> El popup clásico de Chrome, con el mismo contenido. Útil cuando cerraste la burbuja o prefieres no tocar la página.</span></li>
+          <li><span><b>Una sola fuente de verdad.</b> Las dos superficies comparten <code>data.js</code>, <code>render.js</code> y <code>styles.css</code>: corriges una frase en un sitio y cambia en los dos.</span></li>
+          <li><span><b>Aislamiento total.</b> El widget vive en un Shadow DOM cerrado: ni el CSS de TikTok deforma la extensión, ni la extensión toca el de TikTok.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================== PLATAFORMAS ========================== -->
+<section id="plataformas">
+  <div class="envoltura">
+    <span class="rotulo">Cobertura</span>
+    <h2>Cinco plataformas, veinte resúmenes</h2>
+    <p class="entradilla">
+      Esta es la valoración editorial de riesgo de cada sección, tal y como está hoy
+      en <code>data.js</code>. La tabla se genera desde el propio archivo de datos de
+      la extensión, así que nunca se queda desfasada respecto a lo que verías al
+      instalarla.
+    </p>
+
+    <div class="tabla-marco">
+      <table id="matriz">
+        <thead>
+          <tr>
+            <th scope="col">Plataforma</th>
+            <th scope="col">📄 Términos</th>
+            <th scope="col">🍪 Cookies</th>
+            <th scope="col">⚠️ Derechos en riesgo</th>
+          </tr>
+        </thead>
+        <tbody id="matriz-cuerpo">
+          <tr><td colspan="4" style="color:var(--texto-suave)">Cargando la matriz de riesgo…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="aviso">
+      <strong>Sobre Google:</strong> la extensión reconoce el buscador en 23 dominios
+      nacionales —de <code>google.com</code> a <code>google.co.ve</code>—, porque el
+      mismo servicio cambia de dominio en cada país. Añadir uno nuevo es declararlo en
+      tres listas de <code>manifest.json</code>; el resto de la detección ya es genérica.
+    </div>
+  </div>
+</section>
+
+<!-- =========================== PRIVACIDAD =========================== -->
+<section class="franja" id="privacidad">
+  <div class="envoltura">
+    <span class="rotulo">Privacidad</span>
+    <h2>Una extensión sobre privacidad que no te espía</h2>
+    <p class="entradilla">
+      Sería contradictorio de cualquier otra forma. Todo ocurre dentro de tu
+      navegador y nada sale de él.
+    </p>
+
+    <div class="rejilla rejilla-2">
+      <article class="tarjeta">
+        <h3 style="color:var(--alto-fg)">Lo que NO hace</h3>
+        <ul class="chequeo cruces" style="margin-top:16px">
+          <li>No recopila, guarda ni transmite datos personales.</li>
+          <li>No tiene servidor, ni analítica, ni telemetría: no hay a dónde enviar nada.</li>
+          <li>No lee ni modifica el contenido de las páginas que visitas.</li>
+          <li>No pide permisos de red, de almacenamiento ni de historial.</li>
+          <li>No está afiliada a Meta, ByteDance ni Google.</li>
+        </ul>
+      </article>
+
+      <article class="tarjeta">
+        <h3 style="color:var(--bajo-fg)">Lo que sí hace</h3>
+        <ul class="chequeo" style="margin-top:16px">
+          <li>Mira el dominio de la pestaña para saber en qué plataforma estás. Nada más.</li>
+          <li>Pide un único permiso, <code>scripting</code>, y acceso solo a esos cinco sitios.</li>
+          <li>Guarda los textos dentro del propio paquete: funciona sin conexión.</li>
+          <li>Se dibuja en un Shadow DOM cerrado, inaccesible desde la página anfitriona.</li>
+          <li>Es código abierto con licencia MIT: puedes leer cada línea antes de instalarla.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="aviso">
+      <strong>Descargo:</strong> los resúmenes son informativos y educativos. No son
+      asesoría legal ni sustituyen a los documentos oficiales de cada plataforma, que
+      se enlazan en todas las secciones. Detalle completo en
+      <a href="PRIVACY.md">PRIVACY.md</a>.
+    </div>
+  </div>
+</section>
+
+<!-- =========================== INSTALACIÓN =========================== -->
+<section id="instalar">
+  <div class="envoltura">
+    <span class="rotulo">Instalación</span>
+    <h2>Tres pasos, sin tienda de por medio</h2>
+    <p class="entradilla">
+      Todavía no está publicada en la Chrome Web Store, así que se instala en modo
+      desarrollador. Funciona igual en cualquier navegador basado en Chromium:
+      Chrome, Edge, Brave y Opera GX.
+    </p>
+
+    <ol class="pasos">
+      <li>
+        <div>
+          <strong>Descarga el proyecto</strong>
+          <p>En el repositorio, <em>Code → Download ZIP</em>, y descomprímelo donde quieras. La carpeta tiene que quedarse ahí: el navegador la lee de tu disco cada vez que arranca.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Abre las extensiones y activa el modo desarrollador</strong>
+          <p>Escribe <code>chrome://extensions</code> en la barra de direcciones —o <code>edge://extensions</code>, <code>brave://extensions</code>, <code>opera://extensions</code>— y enciende el interruptor <em>Modo de desarrollador</em>, arriba a la derecha.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Carga la carpeta descomprimida</strong>
+          <p>Pulsa <em>Cargar descomprimida</em> y selecciona la carpeta del proyecto. Abre Instagram o YouTube, recarga la pestaña (<code>F5</code>) y busca el escudo 🛡️ abajo a la izquierda.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="aviso">
+      <strong>Si acabas de instalarla y no aparece la burbuja:</strong> recarga la
+      pestaña. Las páginas que ya estaban abiertas antes de instalar la extensión no
+      tienen cargado su script, y el navegador solo lo inyecta al cargar la página.
+    </div>
+  </div>
+</section>
+
+<!-- ============================= CIERRE ============================= -->
+<section>
+  <div class="envoltura">
+    <div class="cierre">
+      <h2>El código está abierto. Los términos, ahora también.</h2>
+      <p>
+        Todo el proyecto cabe en siete archivos comentados en español, pensados para
+        que cualquiera pueda corregir una frase de un resumen sin ser programador.
+      </p>
+      <div class="acciones">
+        <a class="boton boton-secundario" href="https://github.com/1000Dolars/NetSentry">Ver el código en GitHub</a>
+        <a class="boton boton-fantasma" href="https://github.com/1000Dolars/NetSentry/archive/refs/heads/main.zip">Descargar ZIP</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================== PIE =============================== -->
+<footer>
+  <div class="envoltura pie-rejilla">
+    <div>
+      <strong style="color:var(--texto-medio)">Protector de Derechos Digitales</strong> ·
+      v1.4.1 · Licencia MIT<br>
+      Extensión independiente, no afiliada a Meta, ByteDance ni Google.
+      Esta página no carga recursos de terceros ni usa cookies.
+    </div>
+    <div class="pie-enlaces">
+      <a href="https://github.com/1000Dolars/NetSentry">GitHub</a>
+      <a href="PRIVACY.md">Privacidad</a>
+      <a href="CHANGELOG.md">Cambios</a>
+      <a href="LICENSE">Licencia</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Los archivos REALES de la extensión: registran window.PDD_DATA y window.PDDRender -->
+<script src="data.js"></script>
+<script src="render.js"></script>
+
+<script>
+/* ==========================================================================
+   DEMO Y CONTENIDO GENERADO
+   --------------------------------------------------------------------------
+   Nada de esto duplica el contenido de la extensión: las cifras de la
+   portada, la matriz de riesgo y el panel de la demo salen todos de
+   window.PDD_DATA, el mismo objeto que consume content.js. Si mañana se
+   añade una plataforma o se reescribe un punto, esta página se entera sola.
+   ========================================================================== */
+(() => {
+  'use strict';
+
+  const DATOS  = window.PDD_DATA;
+  const RENDER = window.PDDRender;
+  if (!DATOS || !RENDER) return;   // sin los archivos de la extensión no hay demo
+
+  const { PLATAFORMAS, BOTONES, DESCARGO, VERIFICADO, CONTACTO_SOPORTE } = DATOS;
+  const claves = Object.keys(PLATAFORMAS);
+
+  /* ---------------- 1. Cifras de la portada, contadas de verdad ---------- */
+  const totalSecciones = claves.reduce((n, k) => n + Object.keys(PLATAFORMAS[k].secciones).length, 0);
+  const totalPuntos = claves.reduce((n, k) => {
+    const s = PLATAFORMAS[k].secciones;
+    return n + Object.keys(s).reduce((m, c) => m + s[c].puntos.length, 0);
+  }, 0);
+
+  const escribir = (id, valor) => {
+    const nodo = document.getElementById(id);
+    if (nodo) nodo.textContent = valor;
+  };
+  escribir('cifra-plataformas', claves.length);
+  escribir('cifra-resumenes', totalSecciones);
+  escribir('cifra-puntos', totalPuntos);
+
+  /* ---------------- 2. Matriz de riesgo ---------------------------------- */
+  const ETIQUETA = { alto: 'Alto', medio: 'Medio', bajo: 'Bajo' };
+  const cuerpo = document.getElementById('matriz-cuerpo');
+  if (cuerpo) {
+    cuerpo.textContent = '';
+    claves.forEach((clave) => {
+      const p = PLATAFORMAS[clave];
+      const fila = document.createElement('tr');
+
+      const th = document.createElement('th');
+      th.scope = 'row';
+      const emoji = document.createElement('span');
+      emoji.className = 'emoji';
+      emoji.textContent = p.emoji;
+      th.appendChild(emoji);
+      th.appendChild(document.createTextNode(p.nombre));
+      fila.appendChild(th);
+
+      ['tyc', 'cookies', 'derechos'].forEach((seccion) => {
+        const td = document.createElement('td');
+        const riesgo = p.secciones[seccion] && p.secciones[seccion].riesgo;
+        if (riesgo) {
+          const pastilla = document.createElement('span');
+          pastilla.className = 'pastilla ' + riesgo;
+          pastilla.textContent = ETIQUETA[riesgo] || riesgo;
+          td.appendChild(pastilla);
+        } else {
+          td.textContent = '—';
+        }
+        fila.appendChild(td);
+      });
+
+      cuerpo.appendChild(fila);
+    });
+  }
+
+  /* ---------------- 3. El panel real, dentro de un Shadow DOM ------------
+     Misma técnica que content.js: styles.css entero dentro de un shadow
+     root, para que los estilos de la extensión y los de esta página no se
+     toquen. Aquí se usa <link> en vez del fetch() de content.js porque así
+     la demo también funciona abriendo el archivo en local, sin servidor.
+
+     Hay DOS instancias independientes en la página —la de la portada y la
+     interactiva— y cada una monta su propio shadow root, igual que si
+     hubiera dos pestañas abiertas en dos plataformas distintas.
+     ---------------------------------------------------------------------- */
+  function montarPanel(anfitrion, alCargar) {
+    const sombra = anfitrion.attachShadow({ mode: 'open' });
+    const hoja = document.createElement('link');
+    hoja.rel = 'stylesheet';
+    hoja.href = 'styles.css';
+    hoja.addEventListener('load', () => {
+      const cargando = anfitrion.querySelector('.demo-cargando');
+      if (cargando) cargando.remove();
+      alCargar();
+    });
+    sombra.appendChild(hoja);
+
+    // Único retoque sobre los estilos de la extensión: en la página real el
+    // panel es una caja fija de 320 px flotando sobre Instagram, y aquí vive
+    // dentro de una columna que en un móvil es más estrecha que eso. Se le
+    // deja encoger sin pasar nunca de su ancho real, para que en pantalla
+    // grande se vea exactamente igual que instalado.
+    const ajuste = document.createElement('style');
+    ajuste.textContent = '.pdd-panel { width: 100%; max-width: 320px; }';
+    sombra.appendChild(ajuste);
+
+    return sombra;
+  }
+
+  /** Redibuja el panel de `sombra` con los datos de `clave`, abriendo de
+      entrada la sección `seccionInicial` si se pide. */
+  function pintarPanel(sombra, clave, seccionInicial) {
+    const datos = PLATAFORMAS[clave];
+
+    // Fuera el panel anterior; los estilos (<link> y <style>) se quedan.
+    Array.from(sombra.children).forEach((n) => {
+      if (n.tagName !== 'LINK' && n.tagName !== 'STYLE') n.remove();
+    });
+
+    const panel = RENDER.crear('div', 'pdd-panel');
+    panel.setAttribute('role', 'region');
+    panel.setAttribute('aria-label', 'Protector de Derechos Digitales');
+
+    const cabecera = RENDER.crear('div', 'pdd-header');
+    const titulos = RENDER.crear('div', 'pdd-header-txt');
+    titulos.appendChild(RENDER.crear('span', 'pdd-titulo', 'Protector de Derechos Digitales'));
+    titulos.appendChild(RENDER.crear('span', 'pdd-sub', datos.emoji + '  Detectado: ' + datos.nombre));
+    cabecera.appendChild(titulos);
+
+    const nav = RENDER.crear('div', 'pdd-nav');
+    const contenido = RENDER.crear('div', 'pdd-contenido');
+    const pie = RENDER.crear('div', 'pdd-footer');
+    RENDER.crearPie(pie, { descargo: DESCARGO, verificado: VERIFICADO });
+
+    panel.append(cabecera, nav, contenido, pie);
+    sombra.appendChild(panel);
+
+    RENDER.crearBotones({
+      contenedor: nav,
+      botones: BOTONES,
+      onCambiar: (seccion) => {
+        if (!seccion) return RENDER.pintarVacio(contenido);
+        const boton = BOTONES.find((b) => b.clave === seccion);
+        RENDER.pintarSeccion(contenido, datos.secciones[seccion], {
+          contacto: CONTACTO_SOPORTE,
+          nombrePlataforma: datos.nombre,
+          icono: boton && boton.icono
+        });
+      }
+    });
+
+    RENDER.pintarVacio(contenido);
+
+    // Abrir una sección de entrada es pulsar su botón: así el estado visual
+    // y el aria-pressed que gestiona crearBotones quedan sincronizados solos.
+    if (seccionInicial) {
+      const boton = nav.querySelector('.pdd-btn[data-clave="' + seccionInicial + '"]');
+      if (boton) boton.click();
+    }
+  }
+
+  /* ---------------- 4. Instancia de la portada (sin selector) ------------ */
+  const porDefecto = PLATAFORMAS.instagram ? 'instagram' : claves[0];
+  const anfitrionPortada = document.getElementById('portada-host');
+  if (anfitrionPortada) {
+    const sombra = montarPanel(anfitrionPortada,
+      () => pintarPanel(sombra, porDefecto, 'derechos'));
+  }
+
+  /* ---------------- 5. Instancia interactiva (con selector) -------------- */
+  const URLS = {
+    facebook: 'www.facebook.com', instagram: 'www.instagram.com',
+    tiktok: 'www.tiktok.com', google: 'www.google.com', youtube: 'www.youtube.com'
+  };
+
+  const anfitrionDemo = document.getElementById('demo-host');
+  const selector = document.getElementById('demo-selector');
+  if (anfitrionDemo && selector) {
+    const botonesPlataforma = {};
+    let actual = porDefecto;
+    let listo = false;
+
+    const sombra = montarPanel(anfitrionDemo, () => {
+      listo = true;
+      pintarPanel(sombra, actual);
+    });
+
+    claves.forEach((clave) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(clave === actual));
+      b.textContent = PLATAFORMAS[clave].emoji + ' ' + PLATAFORMAS[clave].nombre;
+      b.addEventListener('click', () => {
+        actual = clave;
+        claves.forEach((k) => botonesPlataforma[k].setAttribute('aria-pressed', String(k === clave)));
+        const barraUrl = document.getElementById('demo-url');
+        if (barraUrl) barraUrl.textContent = URLS[clave] || '';
+        if (listo) pintarPanel(sombra, clave);
+      });
+      selector.appendChild(b);
+      botonesPlataforma[clave] = b;
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

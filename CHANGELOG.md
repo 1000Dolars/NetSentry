@@ -1,5 +1,22 @@
 # Historial de cambios
 
+## [Sin publicar] — 2026-09-17
+
+Cambios del repositorio, no de la extensión: la versión sigue siendo 1.4.1 y
+`manifest.json` no se toca.
+
+- El proyecto entero pasa a estar en GitHub. Hasta ahora solo se había subido
+  `PRIVACY.md` a mano desde la web.
+- Nueva página de presentación en `index.html`, publicada con GitHub Pages.
+  Lleva dentro una demo funcional: en vez de capturas de pantalla, carga
+  `data.js`, `render.js` y `styles.css` —los archivos reales— dentro de un
+  Shadow DOM propio, con la misma técnica que usa `content.js` en la página
+  anfitriona. Las cifras y la matriz de riesgo se calculan desde
+  `window.PDD_DATA`, así que no hay contenido duplicado que mantener al día.
+- El README documentaba un `.zip` que no estaba en el repositorio. Ahora
+  `.gitignore` excluye `*.zip` explícitamente —es un artefacto, no código— y
+  el README explica qué tiene que llevar dentro al regenerarlo.
+
 ## [1.4.1] — 2026-09-15
 
 Arreglo: el widget flotante no aparecía en ninguna plataforma.
