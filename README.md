@@ -13,6 +13,12 @@ No está afiliada a ninguna de esas plataformas. Los resúmenes son
 informativos y educativos: no sustituyen a los documentos oficiales ni son
 asesoría legal. Ver [PRIVACY.md](PRIVACY.md).
 
+<p align="center">
+  <a href="https://chromewebstore.google.com/detail/protector-de-derechos-dig/bginhjipdmnpcnknlemcebjlnnianhpe"><strong>Instalar desde la Chrome Web Store</strong></a>
+  ·
+  <a href="https://1000dolars.github.io/NetSentry/"><strong>Página de presentación</strong></a>
+</p>
+
 ## Estructura del proyecto
 
 | Archivo | Qué hace |
@@ -29,27 +35,37 @@ asesoría legal. Ver [PRIVACY.md](PRIVACY.md).
 
 ## Instalar en modo desarrollador
 
-Funciona igual en cualquier navegador basado en Chromium: Chrome, Edge,
-Brave, Opera GX.
+Para usarla, lo normal es instalarla [desde la Chrome Web
+Store](https://chromewebstore.google.com/detail/protector-de-derechos-dig/bginhjipdmnpcnknlemcebjlnnianhpe).
+Esto de aquí es para trabajar sobre el código: carga la carpeta tal cual, sin
+empaquetar, y basta con pulsar *Actualizar* en `chrome://extensions` para ver
+un cambio. Funciona igual en cualquier navegador basado en Chromium: Chrome,
+Edge, Brave, Opera GX.
 
 1. Abre `chrome://extensions` (o `edge://extensions`, `opera://extensions`...).
 2. Activa **Modo de desarrollador**.
 3. Pulsa **Cargar descomprimida** y selecciona esta carpeta.
 
-## Antes de publicarla
+## Pendientes
 
-- **Cambia `CONTACTO_SOPORTE`** en [data.js](data.js) por un correo real — es
-  el destino del botón "Reportar un error en este resumen". Tal como está,
-  apunta a una dirección de ejemplo que no existe.
+Ya está publicada, así que estos dos dejaron de ser detalles de preparación y
+pasaron a afectar a gente que la tiene instalada:
+
+- **`CONTACTO_SOPORTE` sigue siendo una dirección de ejemplo.** En
+  [data.js](data.js) apunta a `reportes@tu-dominio.example`, que no existe.
+  Es el destino del botón "Reportar un error en este resumen", así que hoy
+  ese botón abre un correo que no va a llegar a ninguna parte. Cámbialo por
+  un correo real.
+- **`LICENSE` no tiene titular.** El aviso de copyright dice
+  `[Tu nombre aquí]`.
+
+Y uno de mantenimiento continuo:
+
 - **Revisa la fecha de `VERIFICADO`** en [data.js](data.js) cada vez que
   edites el contenido de `PLATAFORMAS`, para que el usuario sepa qué tan
-  reciente es lo que lee.
-- **Publica [PRIVACY.md](PRIVACY.md)** en una URL propia — la Chrome Web
-  Store la exige por los permisos de host que pide la extensión.
-- La Chrome Web Store también pide capturas de pantalla y una descripción
-  para la ficha; no vienen incluidas en este repositorio.
+  reciente es lo que lee. Las plataformas cambian sus términos sin avisar.
 
-## Publicar en la Chrome Web Store
+## Publicar una versión nueva en la Chrome Web Store
 
 El `.zip` que pide la Web Store **no está versionado** en el repositorio
 (`.gitignore` excluye `*.zip`): es un artefacto que se regenera, no código
@@ -60,23 +76,26 @@ las capturas de la ficha, porque la Web Store no los usa para nada. Regenera
 el zip cada vez que cambies alguno de esos archivos, antes de subir una
 versión nueva.
 
-Antes de subirlo:
+Para subir una actualización:
 
-1. Completa los dos pendientes de la sección anterior (`CONTACTO_SOPORTE` y,
-   si aplica, el nombre en `LICENSE`).
-2. Publica [PRIVACY.md](PRIVACY.md) en una URL propia — el formulario de la
-   Web Store pide un enlace a la política de privacidad, no un archivo.
-3. Entra al [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-   (pide una cuota única de registro de desarrollador si es tu primera vez).
-4. **Nuevo artículo** → sube el `.zip`.
-5. Completa la ficha: descripción, categoría, capturas de pantalla (no
-   incluidas aquí — al menos una, 1280×800 o 640×400), y el icono de la
-   ficha (puedes usar `logo/logo-512.png`).
-6. En la pestaña **Prácticas de privacidad**, justifica por qué la extensión
-   pide acceso a Facebook/Instagram/TikTok/Google/YouTube: para detectar en
-   cuál de esas cinco páginas está el usuario y mostrar el resumen
-   correspondiente — nada más. Pega el enlace a tu `PRIVACY.md` publicado.
-7. Envíala a revisión. Google puede tardar desde horas hasta varios días.
+1. **Sube el número de versión** en `manifest.json`. La Web Store rechaza un
+   paquete cuya versión no sea mayor que la publicada; es el único campo que
+   obliga a tocar.
+2. Anota el cambio en [CHANGELOG.md](CHANGELOG.md).
+3. Regenera el `.zip` con los archivos de la lista de arriba.
+4. Entra al [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole),
+   abre la ficha ya existente → **Paquete** → *Subir paquete nuevo*.
+5. Envíala a revisión. Google puede tardar desde horas hasta varios días, y
+   una actualización se revisa igual que la primera publicación.
+
+Para la política de privacidad que pide el formulario sirve la copia
+renderizada en GitHub:
+`https://github.com/1000Dolars/NetSentry/blob/main/PRIVACY.md`.
+
+Y la justificación de los permisos de host, por si vuelve a hacer falta: la
+extensión pide acceso a Facebook, Instagram, TikTok, Google y YouTube para
+detectar en cuál de esas cinco páginas está el usuario y mostrar el resumen
+correspondiente. Nada más: no lee ni envía contenido de la página.
 
 ## Añadir otro dominio de Google
 

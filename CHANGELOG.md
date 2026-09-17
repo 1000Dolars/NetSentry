@@ -7,6 +7,9 @@ Cambios del repositorio, no de la extensión: la versión sigue siendo 1.4.1 y
 
 - El proyecto entero pasa a estar en GitHub. Hasta ahora solo se había subido
   `PRIVACY.md` a mano desde la web.
+- La extensión ya está publicada en la Chrome Web Store, así que el README y
+  la página enlazan a la ficha y la instalación en modo desarrollador deja de
+  ser la vía principal: pasa a ser la de quien quiera tocar el código.
 - Nueva página de presentación en `index.html`, publicada con GitHub Pages.
   Lleva dentro una demo funcional: en vez de capturas de pantalla, carga
   `data.js`, `render.js` y `styles.css` —los archivos reales— dentro de un
